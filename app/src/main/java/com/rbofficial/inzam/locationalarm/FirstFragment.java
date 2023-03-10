@@ -142,10 +142,10 @@ public class FirstFragment extends Fragment implements LListener {
             v.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
         }else if(distance<=1 && distance>0.5){
             long[] timing = {500,500,500};
-            v.vibrate(VibrationEffect.createWaveform(timing, 2));
+            v.vibrate(VibrationEffect.createWaveform(timing, 1));
         }else if(distance<=0.5){
             long[] timing = {500,500,500};
-            v.vibrate(VibrationEffect.createWaveform(timing, 5));
+            v.vibrate(VibrationEffect.createWaveform(timing, 2));
         }
     }
 
