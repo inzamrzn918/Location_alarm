@@ -68,9 +68,10 @@ public class BGServices extends Service {
         NotificationManager manager = getSystemService(NotificationManager.class);
         manager.createNotificationChannel(serviceChannel);
         Intent notificationIntent = new Intent(this, MainActivity.class);
+
         PendingIntent pendingIntent = PendingIntent.getActivity(this,
                 Utils.LOCATION_ACCESS_CODE,
-                notificationIntent, 0);
+                notificationIntent, PendingIntent.FLAG_IMMUTABLE);
 
         Notification notification = new NotificationCompat.Builder(this, Utils.CHANNEL_ID)
                 .setContentTitle(getString(R.string.app_name))

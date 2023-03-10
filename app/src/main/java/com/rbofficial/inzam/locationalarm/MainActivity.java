@@ -41,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
         preferences = getSharedPreferences(BuildConfig.APPLICATION_ID,MODE_PRIVATE);
         editor = preferences.edit();
 
+        startForegroundService(new Intent(this, BGServices.class));
 
 
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);

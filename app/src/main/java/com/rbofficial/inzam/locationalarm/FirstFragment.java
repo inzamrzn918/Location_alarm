@@ -18,8 +18,11 @@ import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CancellationSignal;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -44,6 +47,7 @@ import com.android.volley.Response;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.microsoft.maps.Geopoint;
+import com.microsoft.maps.Geoposition;
 import com.microsoft.maps.MapAnimationKind;
 import com.microsoft.maps.MapElementLayer;
 import com.microsoft.maps.MapIcon;
@@ -75,6 +79,7 @@ public class FirstFragment extends Fragment implements LListener {
     private SharedPreferences preferences;
     private SharedPreferences.Editor editor;
     private MapUserInterfaceOptions uiOptions;
+    private Geoposition geoposition;
 
     @Override
     public View onCreateView(
@@ -93,15 +98,17 @@ public class FirstFragment extends Fragment implements LListener {
 
 
     public double getDistance(Location org, Location dest){
-        String BASE_URL = "https://dev.virtualearth.net/REST/v1/Routes/DistanceMatrix?origins=26.324430,90.983587&destinations=26.420597,90.972866&travelMode=1&timeUnit=minute&key=";
+        String URL = "";
         String API_KEY = "AlPGvIKjbZMk-0Pu3W7vSDyaOG4vUxhYm79aXGPcaG2vSsBV5vdPpS5wtF0EGAYh";
         String TRAVEL_MODE = "1";
-//        String ORIGIN = org.getLatitude()+","+org.getLongitude();
-//        String DESTINATION = dest.getLatitude()+","+dest.getLongitude();
+        String ORIGIN = org.getLatitude()+","+org.getLongitude();
+        String DESTINATION = dest.getLatitude()+","+dest.getLongitude();
         String TIME_UNITE = "minute";
 
+        URL = Utils.BASE_MAP_URL+"origins="+ORIGIN+"&destinations="+DESTINATION+"&travelMode="+TRAVEL_MODE+"&timeUnit="+TIME_UNITE+"&key="+API_KEY;
+        Log.d(Utils.TAG, "getDistance: "+URL);
         RequestQueue queue = Volley.newRequestQueue(requireContext());
-        StringRequest request = new StringRequest(BASE_URL+API_KEY, response -> {
+        StringRequest request = new StringRequest(URL, response -> {
             try {
                 JSONObject object = new JSONObject(response);
                 JSONArray array = object.getJSONArray("resourceSets");
@@ -112,6 +119,11 @@ public class FirstFragment extends Fragment implements LListener {
                 JSONObject obj3 = arr3.getJSONObject(0);
                 String travelDistance = obj3.getString("travelDistance");
                 Toast.makeText(requireContext(), travelDistance, Toast.LENGTH_LONG).show();
+                Log.d(Utils.TAG, travelDistance);
+                double distance = Double.parseDouble(travelDistance);
+                alertUser(distance);
+                editor.putString("distance", travelDistance);
+                editor.commit();
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -124,7 +136,18 @@ public class FirstFragment extends Fragment implements LListener {
         return 0.0;
     }
 
-
+    private void alertUser(double distance) {
+        Vibrator v = (Vibrator) requireContext().getSystemService(Context.VIBRATOR_SERVICE);
+        if (distance<2 && distance>1){
+            v.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
+        }else if(distance<=1 && distance>0.5){
+            long[] timing = {500,500,500};
+            v.vibrate(VibrationEffect.createWaveform(timing, 2));
+        }else if(distance<=0.5){
+            long[] timing = {500,500,500};
+            v.vibrate(VibrationEffect.createWaveform(timing, 5));
+        }
+    }
 
 
     @Override
@@ -170,6 +193,9 @@ public class FirstFragment extends Fragment implements LListener {
 
 
         mMapView.addOnMapTappedListener(mapTappedEventArgs -> {
+            geoposition = mapTappedEventArgs.location.getPosition();
+            editor.putFloat("dlat", (float) geoposition.getLatitude());
+            editor.putFloat("dlon", (float) geoposition.getLongitude());
             editor.putString("to", mapTappedEventArgs.location.getPosition().getLatitude()
                     +","+mapTappedEventArgs.location.getPosition().getLongitude());
             editor.commit();
@@ -198,7 +224,12 @@ public class FirstFragment extends Fragment implements LListener {
             mPinLayer.getElements().add(pushpin);
 
             if (currLocation!=null){
-                getDistance(currLocation, currLocation);
+                Location location = new Location(LocationManager.GPS_PROVIDER);
+                location.setLatitude(geoposition.getLatitude());
+                location.setLongitude(geoposition.getLongitude());
+
+                getDistance(currLocation, location);
+
             }
             return true;
         });
@@ -223,6 +254,17 @@ public class FirstFragment extends Fragment implements LListener {
                 LOCATION_REFRESH_DISTANCE, this);
         currLocation = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 //        currLocation = mLocationManager.
+        Location dest = new Location(LocationManager.GPS_PROVIDER);
+        if (geoposition==null){
+            Toast.makeText(requireContext(), "Please select destination", Toast.LENGTH_SHORT).show();
+        }
+//        if(geoposition!=null){
+//            dest.setLatitude(preferences.getFloat("dlat", 0.0F));
+//            dest.setLongitude(preferences.getFloat("dlon",0.0F));
+//
+//        }
+
+        getDistance(currLocation, dest);
 
     }
 
@@ -231,7 +273,6 @@ public class FirstFragment extends Fragment implements LListener {
         mMapView.setScene(MapScene.createFromLocationAndRadius(new Geopoint(location.getLatitude(),
                 location.getLongitude()
         ), 1500), MapAnimationKind.LINEAR);
-        Log.d(Utils.TAG, "onLocationChanged: "+location);
         Toast.makeText(requireContext(), location.toString(), Toast.LENGTH_SHORT).show();
         currLocation = location;
         editor.putString("from", location.getLatitude()+","+location.getLongitude());
@@ -241,7 +282,7 @@ public class FirstFragment extends Fragment implements LListener {
         mPinLayer.getElements().add(icon);
         mMapView.getLayers().add(mPinLayer);
         icon.setLocation(geopoint);
-        Toast.makeText(requireContext(), location.toString(), Toast.LENGTH_SHORT).show();
+        updateLocation();
     }
 
     @Override

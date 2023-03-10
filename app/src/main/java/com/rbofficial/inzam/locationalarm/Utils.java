@@ -16,6 +16,7 @@ public class Utils {
     public static final int LOCATION_ACCESS_CODE = 1000;
 
     public static final String TAG = "NO_TAG";
+    public static final String BASE_MAP_URL = "https://dev.virtualearth.net/REST/v1/Routes/DistanceMatrix?";
 
     public static final int LOCATION_REFRESH_TIME = 15000; // 15 seconds to update
     public static final int LOCATION_REFRESH_DISTANCE = 500; // 500 meters to update

@@ -5,6 +5,9 @@
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:allowBackup="true"
@@ -31,6 +34,9 @@
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
+        <service android:name=".BGServices"
+            android:enabled="true"
+            android:exported="false" />
     </application>
 
 </manifest>
