@@ -1,5 +1,9 @@
 package com.rbofficial.inzam.locationalarm;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -22,6 +26,8 @@ public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
+    private SharedPreferences preferences;
+    private SharedPreferences.Editor editor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,15 +38,26 @@ public class MainActivity extends AppCompatActivity {
 
         setSupportActionBar(binding.toolbar);
 
+        preferences = getSharedPreferences(BuildConfig.APPLICATION_ID,MODE_PRIVATE);
+        editor = preferences.edit();
+
+
+
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
-        binding.fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+        binding.fab.setOnClickListener(view -> {
+            String from = preferences.getString("from","20.344,34.34");
+            String to = preferences.getString("to","0:0");
+
+            if (to.equals("0:0")){
+                Snackbar.make(view, "Please select a location", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
+            }else{
+                Intent intent = new Intent(Intent.ACTION_VIEW,
+                        Uri.parse("http://maps.google.com/maps?saddr="+from+"&daddr="+to));
+                startActivity(intent);
             }
         });
     }
