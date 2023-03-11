@@ -8,8 +8,6 @@ import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.location.Location;
-import android.location.LocationRequest;
-import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -22,8 +20,6 @@ import com.google.android.gms.location.LocationResult;
 
 public class BGServices extends Service {
 
-    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 3000;
-    private LocationRequest locationRequest;
     private SharedPreferences preferences;
     private SharedPreferences.Editor editor;
 
@@ -47,15 +43,17 @@ public class BGServices extends Service {
         editor = preferences.edit();
     }
 
-    private LocationCallback locationCallback = new LocationCallback() {
+    private final LocationCallback locationCallback = new LocationCallback() {
         @Override
         public void onLocationResult(@NonNull LocationResult locationResult) {
             super.onLocationResult(locationResult);
             Location currentLocation = locationResult.getLastLocation();
-            editor.putFloat("clat", (float) currentLocation.getLatitude());
-            editor.putFloat("clon", (float) currentLocation.getLongitude());
-            Log.d("Locations", currentLocation.getLatitude() + "," + currentLocation.getLongitude());
-            //Share/Publish Location
+            if (currentLocation != null) {
+                editor.putFloat("clat", (float) currentLocation.getLatitude());
+                editor.putFloat("clon", (float) currentLocation.getLongitude());
+                Log.d("Locations", currentLocation.getLatitude() + "," + currentLocation.getLongitude());
+            }
+
         }
     };
 
